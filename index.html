@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetEquipment - Система учета сетевого оборудования</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.3.0/dist/chart.umd.js"></script>
+    <!-- SheetJS -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- QRCode -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-container">
+            <div class="login-card">
+                <div class="login-header">
+                    <i class="fas fa-server"></i>
+                    <h1>NetEquipment</h1>
+                    <p>Система учета сетевого оборудования</p>
+                </div>
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label class="form-label">Имя пользователя</label>
+                        <input type="text" class="form-control" id="loginUsername" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Пароль</label>
+                        <input type="password" class="form-control" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-sign-in-alt"></i> Войти
+                    </button>
+                </form>
+                <div class="login-footer">
+                    <small class="text-muted">По умолчанию: admin / admin123</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="main-app d-none">
+        <!-- Mobile Menu Toggle -->
+        <button class="mobile-menu-toggle" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
+
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-server"></i>
+                <span>NetEquipment</span>
+            </div>
+
+            <ul class="sidebar-menu">
+                <li>
+                    <a href="#" class="nav-link active" data-page="home">
+                        <i class="fas fa-home"></i>
+                        <span>Главная</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link" data-page="equipment">
+                        <i class="fas fa-server"></i>
+                        <span>Оборудование</span>
+                    </a>
+                </li>
+                <li id="usersMenuItem">
+                    <a href="#" class="nav-link" data-page="users">
+                        <i class="fas fa-users"></i>
+                        <span>Пользователи</span>
+                    </a>
+                </li>
+                <li id="importMenuItem">
+                    <a href="#" class="nav-link" data-page="import">
+                        <i class="fas fa-file-excel"></i>
+                        <span>Импорт Excel</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="nav-link" data-page="export">
+                        <i class="fas fa-file-export"></i>
+                        <span>Экспорт Excel</span>
+                    </a>
+                </li>
+                <li id="logsMenuItem">
+                    <a href="#" class="nav-link" data-page="logs">
+                        <i class="fas fa-history"></i>
+                        <span>Журнал действий</span>
+                    </a>
+                </li>
+                <li id="settingsMenuItem">
+                    <a href="#" class="nav-link" data-page="settings">
+                        <i class="fas fa-cog"></i>
+                        <span>Настройки</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="user-details">
+                        <div class="user-name" id="currentUserName">-</div>
+                        <div class="user-role" id="currentUserRole">-</div>
+                    </div>
+                </div>
+                <div class="user-actions">
+                    <button class="btn btn-sm btn-outline-light w-100 mb-2" onclick="showProfile()">
+                        <i class="fas fa-user"></i> Профиль
+                    </button>
+                    <button class="btn btn-sm btn-danger w-100" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> Выход
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Theme Toggle -->
+            <button class="theme-toggle" onclick="toggleTheme()" title="Переключить тему">
+                <i class="fas fa-moon" id="themeIcon"></i>
+            </button>
+
+            <!-- Pages Container -->
+            <div id="pagesContainer">
+                <!-- Home Page -->
+                <div id="homePage" class="page active">
+                    <div class="page-header">
+                        <h1><i class="fas fa-home"></i> Главная</h1>
+                        <p>Статистика и обзор системы</p>
+                    </div>
+                    <div id="homeContent"></div>
+                </div>
+
+                <!-- Equipment Page -->
+                <div id="equipmentPage" class="page">
+                    <div class="page-header">
+                        <h1><i class="fas fa-server"></i> Оборудование</h1>
+                        <p>Учет и управление сетевым оборудованием</p>
+                    </div>
+                    <div id="equipmentContent"></div>
+                </div>
+
+                <!-- Users Page -->
+                <div id="usersPage" class="page">
+                    <div class="page-header">
+                        <h1><i class="fas fa-users"></i> Пользователи</h1>
+                        <p>Управление пользователями системы</p>
+                    </div>
+                    <div id="usersContent"></div>
+                </div>
+
+                <!-- Import Page -->
+                <div id="importPage" class="page">
+                    <div class="page-header">
+                        <h1><i class="fas fa-file-excel"></i> Импорт Excel</h1>
+                        <p>Загрузка оборудования из Excel файла</p>
+                    </div>
+                    <div id="importContent"></div>
+                </div>
+
+                <!-- Export Page -->
+                <div id="exportPage" class="page">
+                    <div class="page-header">
+                        <h1><i class="fas fa-file-export"></i> Экспорт Excel</h1>
+                        <p>Экспорт оборудования в Excel файл</p>
+                    </div>
+                    <div id="exportContent"></div>
+                </div>
+
+                <!-- Logs Page -->
+                <div id="logsPage" class="page">
+                    <div class="page-header">
+                        <h1><i class="fas fa-history"></i> Журнал действий</h1>
+                        <p>История всех действий в системе</p>
+                    </div>
+                    <div id="logsContent"></div>
+                </div>
+
+                <!-- Settings Page -->
+                <div id="settingsPage" class="page">
+                    <div class="page-header">
+                        <h1><i class="fas fa-cog"></i> Настройки</h1>
+                        <p>Настройки системы и управление данными</p>
+                    </div>
+                    <div id="settingsContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal fade" id="equipmentModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="equipmentModalTitle">Оборудование</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="equipmentForm"></form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" onclick="saveEquipment()">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="userModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="userModalTitle">Пользователь</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="userForm"></form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" onclick="saveUser()">Сохранить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="confirmModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Подтверждение</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="confirmMessage">Вы уверены?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-danger" id="confirmButton">Подтвердить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="equipmentDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Карточка оборудования</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="equipmentDetailContent"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="printEquipmentCard()">
+                        <i class="fas fa-print"></i> Печать
+                    </button>
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Закрыть</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="toast" class="toast" role="alert">
+            <div class="toast-header">
+                <i class="fas fa-info-circle me-2"></i>
+                <strong class="me-auto" id="toastTitle">Уведомление</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast"></button>
+            </div>
+            <div class="toast-body" id="toastMessage"></div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom Scripts -->
+    <script src="js/storage.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/users.js"></script>
+    <script src="js/excel.js"></script>
+    <script src="js/equipment.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
