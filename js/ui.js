@@ -310,8 +310,13 @@ const UI = {
         const settings = Storage.getSettings();
         const backups = Excel.getBackups();
         const currentToken = localStorage.getItem('github_token');
+        const currentUser = Auth.getCurrentUser();
+        const isViewer = currentUser && currentUser.role === 'viewer';
         
-        container.innerHTML = `
+        let html = '';
+        
+        // Секция GitHub - доступна всем
+        html += `
             <div class="row">
                 <div class="col-md-6">
                     <div class="card mb-3">
@@ -348,7 +353,11 @@ const UI = {
                         </div>
                     </div>
                 </div>
-                
+        `;
+        
+        // Остальные настройки - только для админа
+        if (!isViewer) {
+            html += `
                 <div class="col-md-6">
                     <div class="card mb-3">
                         <div class="card-header">
@@ -460,7 +469,10 @@ const UI = {
                     </div>
                 </div>
             </div>
-        `;
+            `;
+        }
+        
+        container.innerHTML = html;
     },
 
     /**

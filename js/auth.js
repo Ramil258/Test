@@ -162,7 +162,7 @@ const Auth = {
             case 'view_logs':
                 return role === 'admin';
             case 'access_settings':
-                return role === 'admin';
+                return ['admin', 'viewer'].includes(role);
             default:
                 return false;
         }
