@@ -107,10 +107,10 @@ const Storage = {
     /**
      * Сохранить оборудование
      */
-    setEquipment(equipment) {
+    async setEquipment(equipment) {
         const result = this.set(this.KEYS.EQUIPMENT, equipment);
         // Синхронизируем с GitHub
-        this.syncEquipmentToGitHub(equipment);
+        await this.syncEquipmentToGitHub(equipment);
         return result;
     },
 
@@ -307,13 +307,12 @@ const Storage = {
     async syncEquipmentFromGitHub() {
         try {
             const githubEquipment = await GitHubStorage.get(GitHubStorage.DATA_KEYS.EQUIPMENT);
-            if (githubEquipment && githubEquipment.length > 0) {
-                // Если в LocalStorage нет данных или данные из GitHub новее
-                const localEquipment = this.getEquipment();
-                if (!localEquipment || localEquipment.length === 0) {
-                    this.setEquipment(githubEquipment);
-                    console.log('Оборудование загружено из GitHub');
-                }
+            if (githubEquipment) {
+                // Всегда загружаем данные из GitHub, если они есть
+                this.set(this.KEYS.EQUIPMENT, githubEquipment);
+                console.log('Оборудование загружено из GitHub:', githubEquipment.length, 'единиц');
+            } else {
+                console.log('Данных в GitHub нет, используем локальные');
             }
         } catch (error) {
             console.error('Ошибка при загрузке из GitHub:', error);

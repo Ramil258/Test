@@ -566,7 +566,7 @@ const Equipment = {
     /**
      * Сохранить оборудование
      */
-    saveEquipment() {
+    async saveEquipment() {
         const form = document.getElementById('equipmentForm');
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
@@ -611,7 +611,7 @@ const Equipment = {
                 Auth.getCurrentUser()?.username);
         }
         
-        Storage.setEquipment(this.currentEquipment);
+        await Storage.setEquipment(this.currentEquipment);
         
         // Закрываем модальное окно
         const modal = bootstrap.Modal.getInstance(document.getElementById('equipmentModal'));
@@ -626,15 +626,15 @@ const Equipment = {
     /**
      * Удалить оборудование
      */
-    deleteItem(id) {
+    async deleteItem(id) {
         const item = this.currentEquipment.find(i => i.id === id);
         if (!item) return;
         
         UI.showConfirm(
             `Вы уверены, что хотите удалить оборудование "${item.inventoryNumber} - ${item.name}"?`,
-            () => {
+            async () => {
                 this.currentEquipment = this.currentEquipment.filter(i => i.id !== id);
-                Storage.setEquipment(this.currentEquipment);
+                await Storage.setEquipment(this.currentEquipment);
                 
                 Storage.addLog('delete', `Удалено оборудование: ${item.inventoryNumber}`, 
                     Auth.getCurrentUser()?.username);
@@ -648,7 +648,7 @@ const Equipment = {
     /**
      * Массовое удаление
      */
-    deleteSelected() {
+    async deleteSelected() {
         if (this.selectedItems.size === 0) {
             UI.showToast('Ошибка', 'Выберите оборудование для удаления', 'error');
             return;
@@ -656,11 +656,11 @@ const Equipment = {
         
         UI.showConfirm(
             `Вы уверены, что хотите удалить ${this.selectedItems.size} единиц оборудования?`,
-            () => {
+            async () => {
                 this.currentEquipment = this.currentEquipment.filter(
                     item => !this.selectedItems.has(item.id)
                 );
-                Storage.setEquipment(this.currentEquipment);
+                await Storage.setEquipment(this.currentEquipment);
                 
                 Storage.addLog('mass_delete', `Массовое удаление: ${this.selectedItems.size} единиц`, 
                     Auth.getCurrentUser()?.username);
