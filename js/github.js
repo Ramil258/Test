@@ -29,24 +29,25 @@ const GitHubStorage = {
         if (savedToken) {
             this.config.token = savedToken;
         }
-        
-        // Если токена нет, запрашиваем у пользователя
-        if (!this.config.token) {
-            this.config.token = await this.requestToken();
-            if (this.config.token) {
-                localStorage.setItem('github_token', this.config.token);
-            }
+    },
+
+    /**
+     * Установить токен
+     */
+    setToken(token) {
+        this.config.token = token;
+        if (token) {
+            localStorage.setItem('github_token', token);
+        } else {
+            localStorage.removeItem('github_token');
         }
     },
 
     /**
-     * Запрос токена у пользователя
+     * Проверить наличие токена
      */
-    requestToken() {
-        return new Promise((resolve) => {
-            const token = prompt('Введите GitHub Personal Access Token для доступа к данным:');
-            resolve(token || null);
-        });
+    hasToken() {
+        return !!this.config.token;
     },
 
     /**

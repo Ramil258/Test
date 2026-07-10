@@ -40,8 +40,10 @@ const Storage = {
             this.setSettings(this.getDefaultSettings());
         }
         
-        // Синхронизируем оборудование с GitHub
-        await this.syncEquipmentFromGitHub();
+        // Синхронизируем оборудование с GitHub только если есть токен
+        if (GitHubStorage.hasToken()) {
+            await this.syncEquipmentFromGitHub();
+        }
     },
 
     /**
@@ -109,8 +111,10 @@ const Storage = {
      */
     async setEquipment(equipment) {
         const result = this.set(this.KEYS.EQUIPMENT, equipment);
-        // Синхронизируем с GitHub
-        await this.syncEquipmentToGitHub(equipment);
+        // Синхронизируем с GitHub только если есть токен
+        if (GitHubStorage.hasToken()) {
+            await this.syncEquipmentToGitHub(equipment);
+        }
         return result;
     },
 

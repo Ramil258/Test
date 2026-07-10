@@ -309,9 +309,46 @@ const UI = {
         
         const settings = Storage.getSettings();
         const backups = Excel.getBackups();
+        const currentToken = localStorage.getItem('github_token');
         
         container.innerHTML = `
             <div class="row">
+                <div class="col-md-6">
+                    <div class="card mb-3">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0"><i class="fab fa-github"></i> Синхронизация с GitHub</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label">GitHub Personal Access Token</label>
+                                <input type="password" class="form-control" id="githubToken" 
+                                       value="${currentToken || ''}" 
+                                       placeholder="ghp_...">
+                                <small class="text-muted">Токен будет сохранен локально в браузере</small>
+                            </div>
+                            
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-primary" onclick="UI.saveGitHubToken()">
+                                    <i class="fas fa-save"></i> Сохранить токен
+                                </button>
+                                <button class="btn btn-success" onclick="UI.syncWithGitHub()" ${!currentToken ? 'disabled' : ''}>
+                                    <i class="fas fa-sync"></i> Синхронизировать с GitHub
+                                </button>
+                                <button class="btn btn-outline-danger" onclick="UI.clearGitHubToken()">
+                                    <i class="fas fa-trash"></i> Удалить токен
+                                </button>
+                            </div>
+                            
+                            <hr>
+                            
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>Статус:</strong> ${currentToken ? 'Токен установлен' : 'Токен не установлен'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="col-md-6">
                     <div class="card mb-3">
                         <div class="card-header">
@@ -334,7 +371,9 @@ const UI = {
                         </div>
                     </div>
                 </div>
-                
+            </div>
+            
+            <div class="row">
                 <div class="col-md-6">
                     <div class="card">
                         <div class="card-header">
@@ -442,6 +481,56 @@ const UI = {
         Equipment.itemsPerPage = parseInt(settings.itemsPerPage);
         
         this.showToast('Успех', 'Настройки сохранены');
+    },
+
+    /**
+     * Сохранить GitHub токен
+     */
+    saveGitHubToken() {
+        const tokenInput = document.getElementById('githubToken');
+        const token = tokenInput.value.trim();
+        
+        if (!token) {
+            this.showToast('Ошибка', 'Введите токен', 'error');
+            return;
+        }
+        
+        GitHubStorage.setToken(token);
+        this.showToast('Успех', 'Токен сохранен');
+        this.renderSettingsPage();
+    },
+
+    /**
+     * Синхронизировать с GitHub
+     */
+    async syncWithGitHub() {
+        try {
+            this.showToast('Информация', 'Синхронизация с GitHub...', 'info');
+            
+            await Storage.syncEquipmentFromGitHub();
+            
+            // Обновляем отображение
+            Equipment.loadEquipment();
+            
+            this.showToast('Успех', 'Данные синхронизированы с GitHub');
+        } catch (error) {
+            console.error('Ошибка синхронизации:', error);
+            this.showToast('Ошибка', 'Не удалось синхронизировать с GitHub', 'error');
+        }
+    },
+
+    /**
+     * Удалить GitHub токен
+     */
+    clearGitHubToken() {
+        UI.showConfirm(
+            'Вы уверены, что хотите удалить токен GitHub? Синхронизация будет отключена.',
+            () => {
+                GitHubStorage.setToken(null);
+                this.showToast('Успех', 'Токен удален');
+                this.renderSettingsPage();
+            }
+        );
     },
 
     /**
