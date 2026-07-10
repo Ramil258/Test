@@ -27,6 +27,9 @@ const Storage = {
             console.error('LocalStorage недоступен:', e);
         }
         
+        // Инициализируем GitHub Storage
+        await GitHubStorage.init();
+        
         // Создаем пользователей по умолчанию если их нет
         if (!this.get(this.KEYS.USERS)) {
             this.setUsers(this.getDefaultUsers());
@@ -36,6 +39,9 @@ const Storage = {
         if (!this.get(this.KEYS.SETTINGS)) {
             this.setSettings(this.getDefaultSettings());
         }
+        
+        // Синхронизируем оборудование с GitHub
+        await this.syncEquipmentFromGitHub();
     },
 
     /**
@@ -102,7 +108,10 @@ const Storage = {
      * Сохранить оборудование
      */
     setEquipment(equipment) {
-        return this.set(this.KEYS.EQUIPMENT, equipment);
+        const result = this.set(this.KEYS.EQUIPMENT, equipment);
+        // Синхронизируем с GitHub
+        this.syncEquipmentToGitHub(equipment);
+        return result;
     },
 
     /**
@@ -278,5 +287,36 @@ const Storage = {
         if (data.logs) this.setLogs(data.logs);
         if (data.settings) this.setSettings(data.settings);
         return true;
+    },
+
+    /**
+     * Синхронизировать оборудование с GitHub
+     */
+    async syncEquipmentToGitHub(equipment) {
+        try {
+            await GitHubStorage.set(GitHubStorage.DATA_KEYS.EQUIPMENT, equipment);
+            console.log('Оборудование синхронизировано с GitHub');
+        } catch (error) {
+            console.error('Ошибка при синхронизации с GitHub:', error);
+        }
+    },
+
+    /**
+     * Загрузить оборудование из GitHub
+     */
+    async syncEquipmentFromGitHub() {
+        try {
+            const githubEquipment = await GitHubStorage.get(GitHubStorage.DATA_KEYS.EQUIPMENT);
+            if (githubEquipment && githubEquipment.length > 0) {
+                // Если в LocalStorage нет данных или данные из GitHub новее
+                const localEquipment = this.getEquipment();
+                if (!localEquipment || localEquipment.length === 0) {
+                    this.setEquipment(githubEquipment);
+                    console.log('Оборудование загружено из GitHub');
+                }
+            }
+        } catch (error) {
+            console.error('Ошибка при загрузке из GitHub:', error);
+        }
     }
 };

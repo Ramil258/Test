@@ -9,7 +9,7 @@ const GitHubStorage = {
         owner: 'Ramil258',
         repo: 'Test',
         issueNumber: 1,
-        token: null // Будет установлен из localStorage или запрошен у пользователя
+        token: null // Будет запрошен у пользователя
     },
 
     // Ключи для хранения в комментариях
